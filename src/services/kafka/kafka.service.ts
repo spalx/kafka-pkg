@@ -1,0 +1,224 @@
+import {
+  Kafka,
+  Producer,
+  Consumer,
+  Admin,
+  logLevel,
+  LogEntry,
+  KafkaMessage,
+} from 'kafkajs';
+
+import { logger, kafkaLogger } from '../../common/logger';
+
+class KafkaService {
+  private topicHandlers: Record<
+    string,
+    (message: KafkaMessage) => Promise<void>
+  > = {};
+  private isProducerConnected: boolean = false;
+  private isConsumerConnected: boolean = false;
+
+  private producer!: Producer;
+  private consumer!: Consumer;
+  private admin!: Admin;
+  private readonly retryLimit = 3;
+
+  public constructor() {
+    const clientId: string = process.env.KAFKA_CLIENT_ID as string;
+    const broker: string = process.env.KAFKA_BROKER as string;
+    if (!clientId || !broker) {
+      throw new Error(
+        'Kafka initialization error: KAFKA_CLIENT_ID and/or KAFKA_BROKER are missing from environment variables.'
+      );
+    }
+    const kafka = new Kafka({
+      clientId,
+      brokers: [broker],
+      logLevel: logLevel.ERROR,
+      logCreator: this.createLogger(),
+    });
+    this.producer = kafka.producer();
+    this.consumer = kafka.consumer({ groupId: `${clientId}-group` });
+    this.admin = kafka.admin();
+  }
+
+  public async createTopics(
+    topics: {
+      topic: string;
+      numPartitions: number;
+      replicationFactor: number;
+    }[]
+  ): Promise<void> {
+    await this.admin.connect();
+
+    const existingTopics = await this.admin.listTopics();
+
+    const newTopics = topics.filter(
+      ({ topic }) => !existingTopics.includes(topic)
+    );
+
+    if (newTopics.length > 0) {
+      await this.admin.createTopics({
+        topics: newTopics.map(
+          ({ topic, numPartitions, replicationFactor }) => ({
+            topic,
+            numPartitions,
+            replicationFactor,
+          })
+        ),
+      });
+    }
+
+    await this.admin.disconnect();
+  }
+
+  public async connectProducer(): Promise<void> {
+    if (this.isProducerConnected) {
+      return;
+    }
+
+    try {
+      await this.producer.connect();
+      this.isProducerConnected = true;
+      logger.info('Producer connected to Kafka');
+    } catch (error) {
+      logger.error('Error initializing Kafka Producer:', error);
+    }
+  }
+
+  public async sendMessage(topic: string, message: object): Promise<void> {
+    await this.connectProducer();
+    await this.producer.send({
+      topic,
+      messages: [{ value: JSON.stringify(message) }],
+    });
+
+    kafkaLogger.info(`Message sent: ${JSON.stringify(message)} to ${topic}`);
+  }
+
+  public async disconnectProducer(): Promise<void> {
+    await this.producer.disconnect();
+    logger.info('Kafka producer disconnected');
+  }
+
+  public async connectConsumer(): Promise<void> {
+    if (this.isConsumerConnected) {
+      return;
+    }
+    try {
+      await this.consumer.connect();
+      this.isConsumerConnected = true;
+      logger.info('Consumer connected to Kafka');
+    } catch (error) {
+      logger.error('Error initializing Kafka Consumer:', error);
+    }
+  }
+
+  public async subscribe(
+    topics: Record<string, (message: KafkaMessage) => Promise<void>>
+  ): Promise<void> {
+    Object.assign(this.topicHandlers, topics);
+  }
+
+  public async runConsumer(): Promise<void> {
+    if (!Object.keys(this.topicHandlers).length) {
+      return;
+    }
+
+    await this.connectConsumer();
+    const topicsKeys = Object.keys(this.topicHandlers);
+
+    await this.consumer.subscribe({
+      topics: topicsKeys,
+      fromBeginning: false,
+    });
+    logger.info('Subscribed to Kafka topics: ' + topicsKeys.join(', '));
+
+    await this.consumer.run({
+      eachMessage: async ({ topic, message }) => {
+        kafkaLogger.info(
+          `Received message: ${message.value?.toString()} from ${topic}`
+        );
+
+        if (this.topicHandlers[topic]) {
+          try {
+            const parsedMessage = JSON.parse(message.value.toString());
+            const retryCount = parsedMessage.retryCount || 0;
+
+            try {
+              await this.topicHandlers[topic](parsedMessage);
+              kafkaLogger.info(
+                `Message processed successfully for topic ${topic}`
+              );
+            } catch (processingError) {
+              kafkaLogger.error(
+                `Error processing message for topic ${topic}:`,
+                processingError
+              );
+              if (retryCount < this.retryLimit) {
+                // Retry the message by sending it back to the same topic
+                kafkaLogger.warn(
+                  `Retrying message for topic ${topic} (Attempt: ${
+                    retryCount + 1
+                  })`
+                );
+
+                await this.producer.send({
+                  topic,
+                  messages: [
+                    {
+                      value: JSON.stringify({
+                        ...parsedMessage,
+                        retryCount: retryCount + 1,
+                      }),
+                    },
+                  ],
+                });
+              } else {
+                kafkaLogger.error(
+                  `Max retry attempts reached for topic ${topic}}`
+                );
+              }
+            }
+          } catch (parsingError) {
+            kafkaLogger.error(
+              `Failed to parse message for topic ${topic}`,
+              parsingError
+            );
+          }
+        } else {
+          kafkaLogger.warn(`No handler defined for topic: ${topic}`);
+        }
+      },
+    });
+  }
+
+  public async disconnectConsumer(): Promise<void> {
+    await this.consumer.disconnect();
+    logger.info('Kafka consumer disconnected');
+  }
+
+  private createLogger() {
+    const kafkaLogLevelMap: Record<logLevel, string> = {
+      [logLevel.ERROR]: 'error',
+      [logLevel.WARN]: 'warn',
+      [logLevel.INFO]: 'info',
+      [logLevel.DEBUG]: 'debug',
+      [logLevel.NOTHING]: '',
+    };
+
+    return (entryLevel: logLevel) =>
+      ({ namespace, level, label, log }: LogEntry) => {
+        const { message, ...extra } = log;
+
+        // Map Kafka log levels to Winston and log the message
+        logger.log({
+          level: kafkaLogLevelMap[level] || 'info',
+          message: `[${namespace}] ${label}: ${message}`,
+          ...extra, // Include additional log details
+        });
+      };
+  }
+}
+
+export default new KafkaService();
