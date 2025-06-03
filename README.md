@@ -31,8 +31,8 @@ Instance of `KafkaService` used for publishing and subscribing to Kafka topics.
 | `disconnectKafka()` | — | `Promise<void>` | Gracefully disconnects producer and consumer |
 | `sendCorrelatedRequestViaKafka(topic, data)` | `topic: string`,<br>`data: CorrelatedRequestDTO` | `Promise<string>`: the request id | Sends a correlated request via Kafka |
 | `sendCorrelatedResponseViaKafka(correlationId, topic, data, error)` | `topic: string`,<br>`data: CorrelatedRequestDTO`,<br>`error: unknown \ null` | `Promise<void>` | Sends a correlated response message via Kafka |
-| `validateCorrelatedRequestDTO(data)` | — | `void` | Validates the request data and throws an error when validation fails |
-| `validateCorrelatedResponseDTO(data)` | — | `void` | Validates the response data and throws an error when validation fails |
+| `validateCorrelatedRequestDTO(data)` | `data: CorrelatedRequestDTO` | `void` | Validates the request data and throws an error when validation fails |
+| `validateCorrelatedResponseDTO(data)` | `data: CorrelatedResponseDTO` | `void` | Validates the response data and throws an error when validation fails |
 
 ---
 
