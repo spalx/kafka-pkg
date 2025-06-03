@@ -1,6 +1,6 @@
 # kafka-pkg
 
-Kafka utility package. Wraps kafkajs with built-in retry logic, structured correlated messaging, and shared DTOs for request/response correlation.
+Package which enables to connect to the kafka service easily.
 
 ---
 
