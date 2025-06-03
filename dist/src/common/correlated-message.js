@@ -8,6 +8,7 @@ exports.sendCorrelatedRequestViaKafka = sendCorrelatedRequestViaKafka;
 exports.validateCorrelatedRequestDTO = validateCorrelatedRequestDTO;
 exports.validateCorrelatedResponseDTO = validateCorrelatedResponseDTO;
 const zod_1 = require("zod");
+const uuid_1 = require("uuid");
 const kafka_1 = __importDefault(require("../services/kafka"));
 const correlated_dto_1 = require("../types/correlated.dto");
 function isErrorWithCode(error) {
@@ -39,9 +40,14 @@ async function sendCorrelatedResponseViaKafka(topic, data, error) {
         error: errorMessage
     };
     await kafka_1.default.sendMessage(topic, response);
+    return data.request_id;
 }
 async function sendCorrelatedRequestViaKafka(topic, data) {
+    if (!data.request_id) {
+        data.request_id = (0, uuid_1.v4)();
+    }
     await kafka_1.default.sendMessage(topic, data);
+    return data.request_id;
 }
 function validateCorrelatedRequestDTO(data) {
     correlated_dto_1.CorrelatedRequestDTOSchema.parse(data);

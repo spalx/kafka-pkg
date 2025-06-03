@@ -1,4 +1,5 @@
 import { ZodError } from 'zod';
+import { v4 as uuidv4 } from 'uuid';
 
 import kafkaService from '../services/kafka';
 import {
@@ -21,7 +22,7 @@ export async function sendCorrelatedResponseViaKafka(
   topic: string,
   data: CorrelatedRequestDTO,
   error: unknown | null
-): Promise<void> {
+): Promise<string> {
   let errorMessage = '';
   let status = 0;
   if (error !== null) {
@@ -44,13 +45,21 @@ export async function sendCorrelatedResponseViaKafka(
   };
 
   await kafkaService.sendMessage(topic, response);
+
+  return data.request_id;
 }
 
 export async function sendCorrelatedRequestViaKafka(
   topic: string,
   data: CorrelatedRequestDTO
-): Promise<void> {
+): Promise<string> {
+  if (!data.request_id) {
+    data.request_id = uuidv4();
+  }
+
   await kafkaService.sendMessage(topic, data);
+
+  return data.request_id;
 }
 
 export function validateCorrelatedRequestDTO(data: CorrelatedRequestDTO): void {

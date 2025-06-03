@@ -4,7 +4,7 @@ exports.CorrelatedResponseDTOSchema = exports.CorrelatedRequestDTOSchema = void 
 const zod_1 = require("zod");
 exports.CorrelatedRequestDTOSchema = zod_1.z.object({
     correlation_id: zod_1.z.string(),
-    request_id: zod_1.z.string(),
+    request_id: zod_1.z.string().optional(),
     data: zod_1.z.object({}),
 });
 exports.CorrelatedResponseDTOSchema = zod_1.z.object({

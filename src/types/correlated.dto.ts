@@ -2,14 +2,15 @@ import { z } from 'zod';
 
 interface CorrelatedDTO {
   correlation_id: string;
-  request_id: string;
 }
 
 export interface CorrelatedRequestDTO<T = object> extends CorrelatedDTO {
+  request_id?: string;
   data: T;
 }
 
 export interface CorrelatedResponseDTO<T = object> extends CorrelatedDTO {
+  request_id: string;
   data: T;
   status: number;
   error?: string;
@@ -17,7 +18,7 @@ export interface CorrelatedResponseDTO<T = object> extends CorrelatedDTO {
 
 export const CorrelatedRequestDTOSchema = z.object({
   correlation_id: z.string(),
-  request_id: z.string(),
+  request_id: z.string().optional(),
   data: z.object({}),
 });
 
