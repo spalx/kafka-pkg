@@ -5,8 +5,7 @@ import kafkaService from '../services/kafka';
 import {
   CorrelatedRequestDTO,
   CorrelatedResponseDTO,
-  CorrelatedRequestDTOSchema,
-  CorrelatedResponseDTOSchema
+  CorrelatedRequestDTOSchema
 } from '../types/correlated.dto';
 
 function isErrorWithCode(error: unknown): error is { code: number } {
@@ -62,8 +61,4 @@ export async function sendCorrelatedRequestViaKafka(
 
 export function validateCorrelatedRequestDTO(data: CorrelatedRequestDTO): void {
   CorrelatedRequestDTOSchema.parse(data);
-}
-
-export function validateCorrelatedResponseDTO(data: CorrelatedResponseDTO): void {
-  CorrelatedResponseDTOSchema.parse(data);
 }
