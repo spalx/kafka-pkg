@@ -60,6 +60,9 @@ class KafkaService {
         logger_1.kafkaLogger.info(`Message sent: ${JSON.stringify(message)} to ${topic}`);
     }
     async disconnectProducer() {
+        if (!this.isProducerConnected) {
+            return;
+        }
         await this.producer.disconnect();
         logger_1.logger.info('Kafka producer disconnected');
     }
@@ -134,6 +137,9 @@ class KafkaService {
         });
     }
     async disconnectConsumer() {
+        if (!this.isConsumerConnected) {
+            return;
+        }
         await this.consumer.disconnect();
         logger_1.logger.info('Kafka consumer disconnected');
     }

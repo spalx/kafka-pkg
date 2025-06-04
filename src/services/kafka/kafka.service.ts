@@ -94,6 +94,10 @@ class KafkaService {
   }
 
   async disconnectProducer(): Promise<void> {
+    if (!this.isProducerConnected) {
+      return;
+    }
+
     await this.producer.disconnect();
     logger.info('Kafka producer disconnected');
   }
@@ -191,6 +195,10 @@ class KafkaService {
   }
 
   async disconnectConsumer(): Promise<void> {
+    if (!this.isConsumerConnected) {
+      return;
+    }
+
     await this.consumer.disconnect();
     logger.info('Kafka consumer disconnected');
   }
