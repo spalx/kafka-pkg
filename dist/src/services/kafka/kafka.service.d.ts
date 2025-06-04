@@ -17,7 +17,7 @@ declare class KafkaService {
     sendMessage(topic: string, message: object): Promise<void>;
     disconnectProducer(): Promise<void>;
     connectConsumer(): Promise<void>;
-    subscribe(topics: Record<string, (message: KafkaMessage) => Promise<void>>): Promise<void>;
+    subscribe(topics: Record<string, (message: KafkaMessage) => Promise<void>>): void;
     runConsumer(): Promise<void>;
     disconnectConsumer(): Promise<void>;
     private createLogger;

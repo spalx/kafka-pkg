@@ -76,7 +76,7 @@ class KafkaService {
             logger_1.logger.error('Error initializing Kafka Consumer:', error);
         }
     }
-    async subscribe(topics) {
+    subscribe(topics) {
         Object.assign(this.topicHandlers, topics);
     }
     async runConsumer() {
