@@ -11,10 +11,7 @@ import {
 import { logger, kafkaLogger } from '../../common/logger';
 
 class KafkaService {
-  private topicHandlers: Record<
-    string,
-    (message: KafkaMessage) => Promise<void>
-  > = {};
+  private topicHandlers: Record<string, (message: KafkaMessage) => Promise<void>> = {};
   private isProducerConnected: boolean = false;
   private isConsumerConnected: boolean = false;
 
@@ -23,7 +20,7 @@ class KafkaService {
   private admin!: Admin;
   private readonly retryLimit = 3;
 
-  public constructor() {
+  constructor() {
     const clientId: string = process.env.KAFKA_CLIENT_ID as string;
     const broker: string = process.env.KAFKA_BROKER as string;
     if (!clientId || !broker) {
@@ -42,7 +39,7 @@ class KafkaService {
     this.admin = kafka.admin();
   }
 
-  public async createTopics(
+  async createTopics(
     topics: {
       topic: string;
       numPartitions: number;
@@ -72,7 +69,7 @@ class KafkaService {
     await this.admin.disconnect();
   }
 
-  public async connectProducer(): Promise<void> {
+  async connectProducer(): Promise<void> {
     if (this.isProducerConnected) {
       return;
     }
@@ -86,7 +83,7 @@ class KafkaService {
     }
   }
 
-  public async sendMessage(topic: string, message: object): Promise<void> {
+  async sendMessage(topic: string, message: object): Promise<void> {
     await this.connectProducer();
     await this.producer.send({
       topic,
@@ -96,12 +93,12 @@ class KafkaService {
     kafkaLogger.info(`Message sent: ${JSON.stringify(message)} to ${topic}`);
   }
 
-  public async disconnectProducer(): Promise<void> {
+  async disconnectProducer(): Promise<void> {
     await this.producer.disconnect();
     logger.info('Kafka producer disconnected');
   }
 
-  public async connectConsumer(): Promise<void> {
+  async connectConsumer(): Promise<void> {
     if (this.isConsumerConnected) {
       return;
     }
@@ -114,13 +111,13 @@ class KafkaService {
     }
   }
 
-  public async subscribe(
+  subscribe(
     topics: Record<string, (message: KafkaMessage) => Promise<void>>
-  ): Promise<void> {
+  ): void {
     Object.assign(this.topicHandlers, topics);
   }
 
-  public async runConsumer(): Promise<void> {
+  async runConsumer(): Promise<void> {
     if (!Object.keys(this.topicHandlers).length) {
       return;
     }
@@ -193,7 +190,7 @@ class KafkaService {
     });
   }
 
-  public async disconnectConsumer(): Promise<void> {
+  async disconnectConsumer(): Promise<void> {
     await this.consumer.disconnect();
     logger.info('Kafka consumer disconnected');
   }
