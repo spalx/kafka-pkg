@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const kafkajs_1 = require("kafkajs");
-const logger_1 = require("../../common/logger");
+const common_loggers_pkg_1 = require("common-loggers-pkg");
 class KafkaService {
     constructor() {
         this.topicHandlers = {};
@@ -45,10 +45,10 @@ class KafkaService {
         try {
             await this.producer.connect();
             this.isProducerConnected = true;
-            logger_1.logger.info('Producer connected to Kafka');
+            common_loggers_pkg_1.logger.info('Producer connected to Kafka');
         }
         catch (error) {
-            logger_1.logger.error('Error initializing Kafka Producer:', error);
+            common_loggers_pkg_1.logger.error('Error initializing Kafka Producer:', error);
         }
     }
     async sendMessage(topic, message) {
@@ -57,14 +57,14 @@ class KafkaService {
             topic,
             messages: [{ value: JSON.stringify(message) }],
         });
-        logger_1.kafkaLogger.info(`Message sent: ${JSON.stringify(message)} to ${topic}`);
+        common_loggers_pkg_1.kafkaLogger.info(`Message sent: ${JSON.stringify(message)} to ${topic}`);
     }
     async disconnectProducer() {
         if (!this.isProducerConnected) {
             return;
         }
         await this.producer.disconnect();
-        logger_1.logger.info('Kafka producer disconnected');
+        common_loggers_pkg_1.logger.info('Kafka producer disconnected');
     }
     async connectConsumer() {
         if (this.isConsumerConnected) {
@@ -73,10 +73,10 @@ class KafkaService {
         try {
             await this.consumer.connect();
             this.isConsumerConnected = true;
-            logger_1.logger.info('Consumer connected to Kafka');
+            common_loggers_pkg_1.logger.info('Consumer connected to Kafka');
         }
         catch (error) {
-            logger_1.logger.error('Error initializing Kafka Consumer:', error);
+            common_loggers_pkg_1.logger.error('Error initializing Kafka Consumer:', error);
         }
     }
     subscribe(topics) {
@@ -92,23 +92,23 @@ class KafkaService {
             topics: topicsKeys,
             fromBeginning: false,
         });
-        logger_1.logger.info('Subscribed to Kafka topics: ' + topicsKeys.join(', '));
+        common_loggers_pkg_1.logger.info('Subscribed to Kafka topics: ' + topicsKeys.join(', '));
         await this.consumer.run({
             eachMessage: async ({ topic, message }) => {
-                logger_1.kafkaLogger.info(`Received message: ${message.value?.toString()} from ${topic}`);
+                common_loggers_pkg_1.kafkaLogger.info(`Received message: ${message.value?.toString()} from ${topic}`);
                 if (this.topicHandlers[topic]) {
                     try {
                         const parsedMessage = JSON.parse(message.value.toString());
                         const retryCount = parsedMessage.retryCount || 0;
                         try {
                             await this.topicHandlers[topic](parsedMessage);
-                            logger_1.kafkaLogger.info(`Message processed successfully for topic ${topic}`);
+                            common_loggers_pkg_1.kafkaLogger.info(`Message processed successfully for topic ${topic}`);
                         }
                         catch (processingError) {
-                            logger_1.kafkaLogger.error(`Error processing message for topic ${topic}:`, processingError);
+                            common_loggers_pkg_1.kafkaLogger.error(`Error processing message for topic ${topic}:`, processingError);
                             if (retryCount < this.retryLimit) {
                                 // Retry the message by sending it back to the same topic
-                                logger_1.kafkaLogger.warn(`Retrying message for topic ${topic} (Attempt: ${retryCount + 1})`);
+                                common_loggers_pkg_1.kafkaLogger.warn(`Retrying message for topic ${topic} (Attempt: ${retryCount + 1})`);
                                 await this.producer.send({
                                     topic,
                                     messages: [
@@ -122,16 +122,16 @@ class KafkaService {
                                 });
                             }
                             else {
-                                logger_1.kafkaLogger.error(`Max retry attempts reached for topic ${topic}}`);
+                                common_loggers_pkg_1.kafkaLogger.error(`Max retry attempts reached for topic ${topic}}`);
                             }
                         }
                     }
                     catch (parsingError) {
-                        logger_1.kafkaLogger.error(`Failed to parse message for topic ${topic}`, parsingError);
+                        common_loggers_pkg_1.kafkaLogger.error(`Failed to parse message for topic ${topic}`, parsingError);
                     }
                 }
                 else {
-                    logger_1.kafkaLogger.warn(`No handler defined for topic: ${topic}`);
+                    common_loggers_pkg_1.kafkaLogger.warn(`No handler defined for topic: ${topic}`);
                 }
             },
         });
@@ -141,7 +141,7 @@ class KafkaService {
             return;
         }
         await this.consumer.disconnect();
-        logger_1.logger.info('Kafka consumer disconnected');
+        common_loggers_pkg_1.logger.info('Kafka consumer disconnected');
     }
     createLogger() {
         const kafkaLogLevelMap = {
@@ -154,7 +154,7 @@ class KafkaService {
         return (entryLevel) => ({ namespace, level, label, log }) => {
             const { message, ...extra } = log;
             // Map Kafka log levels to Winston and log the message
-            logger_1.logger.log({
+            common_loggers_pkg_1.logger.log({
                 level: kafkaLogLevelMap[level] || 'info',
                 message: `[${namespace}] ${label}: ${message}`,
                 ...extra, // Include additional log details
