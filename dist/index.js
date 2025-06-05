@@ -1,25 +1,21 @@
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __exportStar = (this && this.__exportStar) || function(m, exports) {
-    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.kafkaService = void 0;
-var kafka_service_1 = require("./src/services/kafka/kafka.service");
-Object.defineProperty(exports, "kafkaService", { enumerable: true, get: function () { return __importDefault(kafka_service_1).default; } });
-__exportStar(require("./src/services/kafka/index"), exports);
-__exportStar(require("./src/types/correlated.dto"), exports);
-__exportStar(require("./src/common/correlated-message"), exports);
+exports.CorrelatedKafkaResponse = exports.CorrelatedKafkaRequest = exports.kafkaService = void 0;
+const app_hook_pkg_1 = require("app-hook-pkg");
+const kafka_service_1 = __importDefault(require("./src/services/kafka.service"));
+exports.kafkaService = kafka_service_1.default;
+app_hook_pkg_1.appHookService.hookOn(app_hook_pkg_1.AppCycleEvent.Init, async () => {
+    await kafka_service_1.default.connectProducer();
+    await kafka_service_1.default.connectConsumer();
+}, false);
+app_hook_pkg_1.appHookService.hookOn(app_hook_pkg_1.AppCycleEvent.Shutdown, async () => {
+    await kafka_service_1.default.disconnectProducer();
+    await kafka_service_1.default.disconnectConsumer();
+}, false);
+var correlated_kafka_request_1 = require("./src/common/correlated-kafka-request");
+Object.defineProperty(exports, "CorrelatedKafkaRequest", { enumerable: true, get: function () { return __importDefault(correlated_kafka_request_1).default; } });
+var correlated_kafka_response_1 = require("./src/common/correlated-kafka-response");
+Object.defineProperty(exports, "CorrelatedKafkaResponse", { enumerable: true, get: function () { return __importDefault(correlated_kafka_response_1).default; } });
