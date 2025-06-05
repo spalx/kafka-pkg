@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const kafkajs_1 = require("kafkajs");
+const app_hook_pkg_1 = require("app-hook-pkg");
 const common_loggers_pkg_1 = require("common-loggers-pkg");
 class KafkaService {
     constructor() {
@@ -22,6 +23,14 @@ class KafkaService {
         this.producer = kafka.producer();
         this.consumer = kafka.consumer({ groupId: `${clientId}-group` });
         this.admin = kafka.admin();
+        app_hook_pkg_1.appHookService.hookOn(app_hook_pkg_1.AppCycleEvent.Init, async () => {
+            await this.connectProducer();
+            await this.runConsumer();
+        }, false);
+        app_hook_pkg_1.appHookService.hookOn(app_hook_pkg_1.AppCycleEvent.Shutdown, async () => {
+            await this.disconnectProducer();
+            await this.disconnectConsumer();
+        }, false);
     }
     async createTopics(topics) {
         await this.admin.connect();

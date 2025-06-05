@@ -7,6 +7,7 @@ import {
   LogEntry,
   KafkaMessage,
 } from 'kafkajs';
+import { appHookService, AppCycleEvent } from 'app-hook-pkg';
 
 import { logger, kafkaLogger } from 'common-loggers-pkg';
 
@@ -37,6 +38,16 @@ class KafkaService {
     this.producer = kafka.producer();
     this.consumer = kafka.consumer({ groupId: `${clientId}-group` });
     this.admin = kafka.admin();
+
+    appHookService.hookOn(AppCycleEvent.Init, async () => {
+      await this.connectProducer();
+      await this.runConsumer();
+    }, false);
+
+    appHookService.hookOn(AppCycleEvent.Shutdown, async () => {
+      await this.disconnectProducer();
+      await this.disconnectConsumer();
+    }, false);
   }
 
   async createTopics(
