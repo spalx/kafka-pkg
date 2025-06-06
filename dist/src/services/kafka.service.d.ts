@@ -1,5 +1,6 @@
 import { KafkaMessage } from 'kafkajs';
-declare class KafkaService {
+import { IAppPkg } from 'app-life-cycle-pkg';
+declare class KafkaService implements IAppPkg {
     private topicHandlers;
     private isProducerConnected;
     private isConsumerConnected;
@@ -8,6 +9,7 @@ declare class KafkaService {
     private admin;
     private readonly retryLimit;
     constructor();
+    init(): Promise<void>;
     createTopics(topics: {
         topic: string;
         numPartitions: number;

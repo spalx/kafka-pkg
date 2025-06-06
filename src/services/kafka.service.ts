@@ -7,11 +7,11 @@ import {
   LogEntry,
   KafkaMessage,
 } from 'kafkajs';
-import { appHookService, AppCycleEvent } from 'app-hook-pkg';
+import { appService, AppLifeCycleEvent, IAppPkg } from 'app-life-cycle-pkg';
 
 import { logger, kafkaLogger } from 'common-loggers-pkg';
 
-class KafkaService {
+class KafkaService implements IAppPkg {
   private topicHandlers: Record<string, (message: KafkaMessage) => Promise<void>> = {};
   private isProducerConnected: boolean = false;
   private isConsumerConnected: boolean = false;
@@ -38,13 +38,13 @@ class KafkaService {
     this.producer = kafka.producer();
     this.consumer = kafka.consumer({ groupId: `${clientId}-group` });
     this.admin = kafka.admin();
+  }
 
-    appHookService.hookOn(AppCycleEvent.Init, async () => {
-      await this.connectProducer();
-      await this.runConsumer();
-    }, false);
+  async init(): Promise<void> {
+    await this.connectProducer();
+    await this.runConsumer();
 
-    appHookService.hookOn(AppCycleEvent.Shutdown, async () => {
+    appService.hookOn(AppLifeCycleEvent.Shutdown, async () => {
       await this.disconnectProducer();
       await this.disconnectConsumer();
     }, false);

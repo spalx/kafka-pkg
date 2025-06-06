@@ -1,5 +1,4 @@
 import { v4 as uuidv4 } from 'uuid';
-import { appHookService, AppCycleEvent } from 'app-hook-pkg';
 
 import kafkaService from '../services/kafka.service';
 import {
@@ -15,19 +14,18 @@ class CorrelatedKafkaRequest {
   constructor(topic: string) {
     this.topic = topic;
     const topicName = `did.${topic}`;
-    appHookService.hookOn(AppCycleEvent.Init, async () => {
-      kafkaService.subscribe({
-        [topicName]: async (message: object) => {
-          const response = message as CorrelatedResponseDTO;
-          if (response.request_id && this.pendingResponses.has(response.request_id)) {
-            const resolve = this.pendingResponses.get(response.request_id);
-            if (resolve) {
-              resolve(response);
-              this.pendingResponses.delete(response.request_id);
-            }
+
+    kafkaService.subscribe({
+      [topicName]: async (message: object) => {
+        const response = message as CorrelatedResponseDTO;
+        if (response.request_id && this.pendingResponses.has(response.request_id)) {
+          const resolve = this.pendingResponses.get(response.request_id);
+          if (resolve) {
+            resolve(response);
+            this.pendingResponses.delete(response.request_id);
           }
         }
-      });
+      }
     });
   }
 
