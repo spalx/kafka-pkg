@@ -10,6 +10,7 @@ declare class KafkaService implements IAppPkg {
     private readonly retryLimit;
     constructor();
     init(): Promise<void>;
+    shutdown(): Promise<void>;
     createTopics(topics: {
         topic: string;
         numPartitions: number;

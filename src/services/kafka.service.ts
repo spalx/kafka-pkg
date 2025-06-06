@@ -7,7 +7,7 @@ import {
   LogEntry,
   KafkaMessage,
 } from 'kafkajs';
-import { appService, AppLifeCycleEvent, IAppPkg } from 'app-life-cycle-pkg';
+import { IAppPkg } from 'app-life-cycle-pkg';
 
 import { logger, kafkaLogger } from 'common-loggers-pkg';
 
@@ -43,11 +43,11 @@ class KafkaService implements IAppPkg {
   async init(): Promise<void> {
     await this.connectProducer();
     await this.runConsumer();
+  }
 
-    appService.hookOn(AppLifeCycleEvent.Shutdown, async () => {
-      await this.disconnectProducer();
-      await this.disconnectConsumer();
-    }, false);
+  async shutdown(): Promise<void> {
+    await this.disconnectProducer();
+    await this.disconnectConsumer();
   }
 
   async createTopics(

@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const kafkajs_1 = require("kafkajs");
-const app_life_cycle_pkg_1 = require("app-life-cycle-pkg");
 const common_loggers_pkg_1 = require("common-loggers-pkg");
 class KafkaService {
     constructor() {
@@ -27,10 +26,10 @@ class KafkaService {
     async init() {
         await this.connectProducer();
         await this.runConsumer();
-        app_life_cycle_pkg_1.appService.hookOn(app_life_cycle_pkg_1.AppLifeCycleEvent.Shutdown, async () => {
-            await this.disconnectProducer();
-            await this.disconnectConsumer();
-        }, false);
+    }
+    async shutdown() {
+        await this.disconnectProducer();
+        await this.disconnectConsumer();
     }
     async createTopics(topics) {
         await this.admin.connect();
