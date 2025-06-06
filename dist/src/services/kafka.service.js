@@ -34,14 +34,19 @@ class KafkaService {
     async createTopics(topics) {
         await this.admin.connect();
         const existingTopics = await this.admin.listTopics();
-        const newTopics = topics.filter(({ topic }) => !existingTopics.includes(topic));
+        // Expand the original topics to include "did." prefixed versions
+        const allTopics = topics.flatMap(({ topic, numPartitions, replicationFactor }) => [
+            { topic, numPartitions, replicationFactor },
+            {
+                topic: `did.${topic}`,
+                numPartitions,
+                replicationFactor,
+            },
+        ]);
+        const newTopics = allTopics.filter(({ topic }) => !existingTopics.includes(topic));
         if (newTopics.length > 0) {
             await this.admin.createTopics({
-                topics: newTopics.map(({ topic, numPartitions, replicationFactor }) => ({
-                    topic,
-                    numPartitions,
-                    replicationFactor,
-                })),
+                topics: newTopics,
             });
         }
         await this.admin.disconnect();
