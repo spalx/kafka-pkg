@@ -8,17 +8,17 @@ Package which enables to connect to the kafka service easily.
 
 This package depends on the following packages:
 
-[app-life-cycle-pkg](https://github.com/spalx/app-life-cycle-pkg)
+[app-life-cycle-pkg](https://github.com/spalx/app-life-cycle-pkg)<br>
 [common-loggers-pkg](https://github.com/spalx/common-loggers-pkg)
 
 And expects the following environment variables to be set beforehand:
 
-`KAFKA_CLIENT_ID` - string representing the name of the client
+`KAFKA_CLIENT_ID` - string representing the name of the client<br>
 `KAFKA_BROKER` - the connection url of the kafka broker (kafka:9092 for example)
 
 ## kafkaService
 
-Instance of `KafkaService` used for publishing and subscribing to Kafka topics.
+Instance of `KafkaService` used for publishing and subscribing to Kafka topics.<br>
 Since this service implements the IAppPkg interface, the recommended way of using it is by registering it in your app initialization script like this:
 
 ```ts
@@ -43,8 +43,8 @@ appService.use(kafkaService);
 
 ## CorrelatedKafkaRequest class
 
-Helper class that allows to easily send kafka messages and receive the responses as regular JS promises.
-Side effect of using this class:
+Helper class that allows to easily send kafka messages and receive the responses as regular JS promises.<br>
+Side effect of using this class:<br>
 - It subscribes to the destination topic name of the message + prepending a "did.". So for example, if you are sending a message to a kafka topic called "sendEmail", this class will subscribe to the topic "did.sendEmail", in order to know when the response comes back.
 
 Recommended usage of this class in your IAppPkg class:
@@ -143,7 +143,7 @@ export default new SomeService();
 
 ### CorrelatedRequestDTOSchema
 
-Used for validating CorrelatedRequestDTO objects.
+Used for validating CorrelatedRequestDTO objects.<br>
 Uses Zod library for validation.
 
 Recommended usage:
