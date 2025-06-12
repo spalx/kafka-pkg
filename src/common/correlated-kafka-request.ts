@@ -1,11 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 
 import kafkaService from '../services/kafka.service';
-import {
-  CorrelatedRequestDTO,
-  CorrelatedResponseDTO,
-  CorrelatedRequestDTOSchema
-} from '../types/correlated.dto';
+import { CorrelatedRequestDTO, CorrelatedResponseDTO } from '../types/correlated.dto';
 
 class CorrelatedKafkaRequest {
   private pendingResponses: Map<string, (message: CorrelatedResponseDTO) => void> = new Map();
@@ -33,8 +29,6 @@ class CorrelatedKafkaRequest {
     data: CorrelatedRequestDTO,
     timeout = 10000
   ): Promise<CorrelatedResponseDTO> {
-    CorrelatedRequestDTOSchema.parse(data);
-
     if (!data.request_id) {
       data.request_id = uuidv4();
     }
