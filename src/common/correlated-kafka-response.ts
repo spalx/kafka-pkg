@@ -23,6 +23,15 @@ class CorrelatedKafkaResponse {
       errorMessage = error instanceof Error ? error.message : 'Internal Server Error';
       if (error instanceof ZodError) {
         status = 400;
+        const formatted = error.format();
+        const messages = Object.entries(formatted).reduce((acc, [key, val]) => {
+          if (val && typeof val === 'object' && '_errors' in val && (val._errors as string[]).length) {
+            acc[key] = (val._errors as string[]).join(', ');
+          }
+          return acc;
+        }, {} as Record<string, string>);
+
+        errorMessage = Object.values(messages).join(', ');
       } else if (this.isErrorWithCode(error)) {
         status = error.code;
       } else {
