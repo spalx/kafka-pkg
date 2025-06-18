@@ -36,7 +36,7 @@ class KafkaService implements IAppPkg {
       logCreator: this.createLogger(),
     });
     this.producer = kafka.producer();
-    this.consumer = kafka.consumer({ groupId: `${clientId}-group`, groupInstanceId: `${clientId}-instance` });
+    this.consumer = kafka.consumer({ groupId: `${clientId}-group` });
     this.admin = kafka.admin();
   }
 
