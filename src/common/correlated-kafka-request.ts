@@ -35,20 +35,26 @@ class CorrelatedKafkaRequest {
 
     return new Promise<CorrelatedResponseDTO>(async (resolve, reject) => {
       const timer = setTimeout(() => {
-        this.pendingResponses.delete(data.request_id);
+        if (data.request_id) {
+          this.pendingResponses.delete(data.request_id);
+        }
         reject(new Error(`Timeout waiting for Kafka response on ${this.topic}`));
       }, timeout);
 
-      this.pendingResponses.set(data.request_id, (msg) => {
-        clearTimeout(timer);
-        resolve(msg);
-      });
+      if (data.request_id) {
+        this.pendingResponses.set(data.request_id, (msg) => {
+          clearTimeout(timer);
+          resolve(msg);
+        });
+      }
 
       try {
         await kafkaService.sendMessage(this.topic, data);
       } catch (err) {
         clearTimeout(timer);
-        this.pendingResponses.delete(data.request_id);
+        if (data.request_id) {
+          this.pendingResponses.delete(data.request_id);
+        }
         reject(err);
       }
     });

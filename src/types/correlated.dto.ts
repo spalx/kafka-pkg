@@ -10,7 +10,7 @@ export interface CorrelatedRequestDTO<T = object> extends CorrelatedDTO {
 }
 
 export interface CorrelatedResponseDTO<T = object> extends CorrelatedDTO {
-  request_id: string;
+  request_id?: string;
   data: T;
   status: number;
   error?: string;

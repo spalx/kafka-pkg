@@ -156,7 +156,7 @@ class KafkaService implements IAppPkg {
           `Received message: ${message.value?.toString()} from ${topic}`
         );
 
-        if (this.topicHandlers[topic]) {
+        if (this.topicHandlers[topic] && message.value) {
           try {
             const parsedMessage = JSON.parse(message.value.toString());
             const retryCount = parsedMessage.retryCount || 0;
