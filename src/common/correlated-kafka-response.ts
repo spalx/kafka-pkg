@@ -1,6 +1,6 @@
 import { ZodError } from 'zod';
 
-import kafkaService from '@/services/kafka.service';
+import kafkaService from '../services/kafka.service';
 import {
   CorrelatedRequestDTO,
   CorrelatedResponseDTO
