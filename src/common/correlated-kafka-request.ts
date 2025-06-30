@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 
-import kafkaService from '../services/kafka.service';
-import { CorrelatedRequestDTO, CorrelatedResponseDTO } from '../types/correlated.dto';
+import kafkaService from '@/services/kafka.service';
+import { CorrelatedRequestDTO, CorrelatedResponseDTO } from '@/types/correlated.dto';
 
 class CorrelatedKafkaRequest {
   private pendingResponses: Map<string, (message: CorrelatedResponseDTO) => void> = new Map();
